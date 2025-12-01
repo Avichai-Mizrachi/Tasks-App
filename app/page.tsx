@@ -3,6 +3,7 @@
 import { useState } from "react"
 import { LoginPage } from "@/components/login-page"
 import { TodoDashboard } from "@/components/todo-dashboard"
+import firebaseApp from "../firebase"
 
 export default function Home() {
   const [isAuthenticated, setIsAuthenticated] = useState(false)
