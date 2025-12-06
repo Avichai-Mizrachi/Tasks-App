@@ -15,9 +15,10 @@ interface AddTaskDialogProps {
   open: boolean
   onOpenChange: (open: boolean) => void
   onAddTask: (task: Omit<Task, "id" | "createdAt">) => void
+  refetchTasks: () => void
 }
 
-export function AddTaskDialog({ open, onOpenChange, onAddTask }: AddTaskDialogProps) {
+export function AddTaskDialog({ open, onOpenChange, onAddTask, refetchTasks }: AddTaskDialogProps) {
   const [text, setText] = useState("")
   const [category, setCategory] = useState<Task["category"]>("personal")
   const [priority, setPriority] = useState<Task["priority"]>("medium")
@@ -39,7 +40,7 @@ export function AddTaskDialog({ open, onOpenChange, onAddTask }: AddTaskDialogPr
       return
     }
 
-
+    refetchTasks()
 
     // Reset form
     setText("")
@@ -99,7 +100,7 @@ export function AddTaskDialog({ open, onOpenChange, onAddTask }: AddTaskDialogPr
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)} className="flex-1">
               Cancel
             </Button>
-            <Button type="submit" className="flex-1 bg-gradient-to-r from-primary to-accent">
+            <Button type="submit" variant="outline" className="flex-1">
               Add
             </Button>
           </div>

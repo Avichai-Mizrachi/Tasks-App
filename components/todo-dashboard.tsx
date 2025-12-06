@@ -259,6 +259,7 @@ export function TodoDashboard({ userName, onLogout }: TodoDashboardProps) {
         open={isDialogOpen}
         onOpenChange={setIsDialogOpen}
         onAddTask={addTask}
+        refetchTasks={fetchTasks}
       />
     </div>
   );
