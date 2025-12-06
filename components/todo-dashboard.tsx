@@ -1,14 +1,12 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { TodoItem } from "@/components/todo-item"
 import { AddTaskDialog } from "@/components/add-task-dialog"
 import { LogOut, Plus } from "lucide-react"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { db } from "@/lib/firebase"
-import { collection, addDoc, updateDoc, deleteDoc, doc, onSnapshot, query, where, Timestamp } from "firebase/firestore"
 
 export interface Task {
   id: string
@@ -18,7 +16,6 @@ export interface Task {
   priority: "high" | "medium" | "low"
   dueDate: string
   createdAt: number
-  userId: string
 }
 
 interface TodoDashboardProps {
@@ -36,53 +33,22 @@ export function TodoDashboard({ userName, onLogout }: TodoDashboardProps) {
   const [sortBy, setSortBy] = useState<SortType>("createdAt")
   const [isDialogOpen, setIsDialogOpen] = useState(false)
 
-  // Load tasks from Firestore
-  useEffect(() => {
-    const q = query(collection(db, "tasks"), where("userId", "==", userName))
-
-    const unsubscribe = onSnapshot(q, (snapshot) => {
-      const tasksData: Task[] = []
-      snapshot.forEach((doc) => {
-        tasksData.push({ id: doc.id, ...doc.data() } as Task)
-      })
-      setTasks(tasksData)
-    })
-
-    return () => unsubscribe()
-  }, [userName])
-
-  const addTask = async (task: Omit<Task, "id" | "createdAt" | "userId">) => {
-    try {
-      await addDoc(collection(db, "tasks"), {
-        ...task,
-        userId: userName,
-        createdAt: Date.now(),
-      })
-      setIsDialogOpen(false)
-    } catch (error) {
-      console.error("Error adding task:", error)
+  const addTask = (task: Omit<Task, "id" | "createdAt">) => {
+    const newTask: Task = {
+      ...task,
+      id: Date.now().toString(),
+      createdAt: Date.now(),
     }
+    setTasks([newTask, ...tasks])
+    setIsDialogOpen(false)
   }
 
-  const toggleTask = async (id: string) => {
-    try {
-      const task = tasks.find((t) => t.id === id)
-      if (task) {
-        await updateDoc(doc(db, "tasks", id), {
-          completed: !task.completed,
-        })
-      }
-    } catch (error) {
-      console.error("Error toggling task:", error)
-    }
+  const toggleTask = (id: string) => {
+    setTasks(tasks.map((task) => (task.id === id ? { ...task, completed: !task.completed } : task)))
   }
 
-  const deleteTask = async (id: string) => {
-    try {
-      await deleteDoc(doc(db, "tasks", id))
-    } catch (error) {
-      console.error("Error deleting task:", error)
-    }
+  const deleteTask = (id: string) => {
+    setTasks(tasks.filter((task) => task.id !== id))
   }
 
   const getFilteredTasks = () => {
