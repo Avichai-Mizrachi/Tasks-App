@@ -1,86 +1,130 @@
-"use client"
+"use client";
 
-import { useState } from "react"
-import { Button } from "@/components/ui/button"
-import { Card } from "@/components/ui/card"
-import { TodoItem } from "@/components/todo-item"
-import { AddTaskDialog } from "@/components/add-task-dialog"
-import { LogOut, Plus } from "lucide-react"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { useState, useEffect } from "react";
+import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
+import { TodoItem } from "@/components/todo-item";
+import { AddTaskDialog } from "@/components/add-task-dialog";
+import { LogOut, Plus } from "lucide-react";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { supabase } from "@/lib/supabase-client";
 
 export interface Task {
-  id: string
-  text: string
-  completed: boolean
-  category: "work" | "personal" | "shopping"
-  priority: "high" | "medium" | "low"
-  dueDate: string
-  createdAt: number
+  id: string;
+  text: string;
+  completed: boolean;
+  category: "work" | "personal" | "shopping";
+  priority: "high" | "medium" | "low";
+  createdAt: string;
 }
 
 interface TodoDashboardProps {
-  userName: string
-  onLogout: () => void
+  userName: string;
+  onLogout: () => void;
 }
 
-type FilterType = "all" | "active" | "completed"
-type SortType = "priority" | "dueDate" | "createdAt"
+type FilterType = "all" | "active" | "completed";
+type SortType = "priority" | "createdAt";
 
 export function TodoDashboard({ userName, onLogout }: TodoDashboardProps) {
-  const [tasks, setTasks] = useState<Task[]>([])
-  const [filter, setFilter] = useState<FilterType>("all")
-  const [categoryFilter, setCategoryFilter] = useState<string>("all")
-  const [sortBy, setSortBy] = useState<SortType>("createdAt")
-  const [isDialogOpen, setIsDialogOpen] = useState(false)
+  const [tasks, setTasks] = useState<Task[]>([]);
+  const [filter, setFilter] = useState<FilterType>("all");
+  const [categoryFilter, setCategoryFilter] = useState<string>("all");
+  const [sortBy, setSortBy] = useState<SortType>("createdAt");
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  
+  
+  useEffect(() => {
+        fetchTasks()
+      },[])
+  
+  
+      const fetchTasks = async () => {
+    const { error,data } = await supabase
+      .from("tasks")
+      .select("*")
+      .order("createdAt", { ascending: true });
+
+      if (error) {
+      console.error("Error reading task:", error.message)
+      return
+    }
+
+    if(data){
+      setTasks(data);
+    }
+
+    
+  };
+
+  
 
   const addTask = (task: Omit<Task, "id" | "createdAt">) => {
     const newTask: Task = {
       ...task,
       id: Date.now().toString(),
-      createdAt: Date.now(),
-    }
-    setTasks([newTask, ...tasks])
-    setIsDialogOpen(false)
-  }
+      createdAt: new Date().toISOString(),
+    };
+    setTasks([newTask, ...tasks]);
+    setIsDialogOpen(false);
+  };
 
   const toggleTask = (id: string) => {
-    setTasks(tasks.map((task) => (task.id === id ? { ...task, completed: !task.completed } : task)))
-  }
+    setTasks(
+      tasks.map((task) =>
+        task.id === id ? { ...task, completed: !task.completed } : task
+      )
+    );
+  };
 
-  const deleteTask = (id: string) => {
-    setTasks(tasks.filter((task) => task.id !== id))
+  const deleteTask = async (id: string) => {
+
+    const { error } = await supabase.from("tasks").delete().eq("id", id);
+
+    if (error) {
+      console.error("Error deleting task:", error.message)
+      return
+    }
+
+    setTasks(tasks.filter((tasks) => tasks.id !== id));
   }
 
   const getFilteredTasks = () => {
-    let filtered = tasks
+    let filtered = tasks;
 
     // Apply completion filter
     if (filter === "active") {
-      filtered = filtered.filter((task) => !task.completed)
+      filtered = filtered.filter((task) => !task.completed);
     } else if (filter === "completed") {
-      filtered = filtered.filter((task) => task.completed)
+      filtered = filtered.filter((task) => task.completed);
     }
 
     // Apply category filter
     if (categoryFilter !== "all") {
-      filtered = filtered.filter((task) => task.category === categoryFilter)
+      filtered = filtered.filter((task) => task.category === categoryFilter);
     }
 
     // Apply sorting
     return filtered.sort((a, b) => {
       if (sortBy === "priority") {
-        const priorityOrder = { high: 0, medium: 1, low: 2 }
-        return priorityOrder[a.priority] - priorityOrder[b.priority]
-      } else if (sortBy === "dueDate") {
-        return new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime()
+        const priorityOrder = { high: 0, medium: 1, low: 2 };
+        return priorityOrder[a.priority] - priorityOrder[b.priority];
       } else {
-        return b.createdAt - a.createdAt
+        return (
+          new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+        );
       }
-    })
-  }
+    });
+  };
 
-  const filteredTasks = getFilteredTasks()
-  const activeCount = tasks.filter((task) => !task.completed).length
+  const filteredTasks = getFilteredTasks();
+  const activeCount = tasks.filter((task) => !task.completed).length;
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-primary/5 via-accent/5 to-background">
@@ -94,7 +138,12 @@ export function TodoDashboard({ userName, onLogout }: TodoDashboardProps) {
               </h1>
               <p className="text-muted-foreground mt-1">Hello, {userName}</p>
             </div>
-            <Button variant="outline" size="sm" onClick={onLogout} className="flex items-center gap-2 bg-transparent">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={onLogout}
+              className="flex items-center gap-2 bg-transparent"
+            >
               <LogOut className="h-4 w-4" />
               <span className="hidden sm:inline">Logout</span>
             </Button>
@@ -154,20 +203,24 @@ export function TodoDashboard({ userName, onLogout }: TodoDashboardProps) {
               </Select>
 
               {/* Sort */}
-              <Select value={sortBy} onValueChange={(value) => setSortBy(value as SortType)}>
+              <Select
+                value={sortBy}
+                onValueChange={(value) => setSortBy(value as SortType)}
+              >
                 <SelectTrigger className="w-full sm:w-40">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="createdAt">Date Created</SelectItem>
                   <SelectItem value="priority">Priority</SelectItem>
-                  <SelectItem value="dueDate">Due Date</SelectItem>
                 </SelectContent>
               </Select>
             </div>
 
             {/* Counter */}
-            <div className="text-center text-sm text-muted-foreground">{activeCount} active tasks</div>
+            <div className="text-center text-sm text-muted-foreground">
+              {activeCount} active tasks
+            </div>
           </div>
         </Card>
 
@@ -177,25 +230,36 @@ export function TodoDashboard({ userName, onLogout }: TodoDashboardProps) {
             <Card className="shadow-lg border-2">
               <div className="p-12 text-center">
                 <div className="text-6xl mb-4">📝</div>
-                <h3 className="text-xl font-semibold mb-2">No tasks to display</h3>
+                <h3 className="text-xl font-semibold mb-2">
+                  No tasks to display
+                </h3>
                 <p className="text-muted-foreground">
                   {filter === "completed"
                     ? "You haven't completed any tasks yet"
                     : filter === "active"
-                      ? "All tasks completed!"
-                      : "Start by adding new tasks"}
+                    ? "All tasks completed!"
+                    : "Start by adding new tasks"}
                 </p>
               </div>
             </Card>
           ) : (
             filteredTasks.map((task) => (
-              <TodoItem key={task.id} task={task} onToggle={toggleTask} onDelete={deleteTask} />
+              <TodoItem
+                key={task.id}
+                task={task}
+                onToggle={toggleTask}
+                onDelete={deleteTask}
+              />
             ))
           )}
         </div>
       </div>
 
-      <AddTaskDialog open={isDialogOpen} onOpenChange={setIsDialogOpen} onAddTask={addTask} />
+      <AddTaskDialog
+        open={isDialogOpen}
+        onOpenChange={setIsDialogOpen}
+        onAddTask={addTask}
+      />
     </div>
-  )
+  );
 }

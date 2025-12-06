@@ -79,11 +79,6 @@ export function TodoItem({ task, onToggle, onDelete }: TodoItemProps) {
             <span className={cn("text-xs font-medium px-2.5 py-1 rounded-full border", categoryColors[task.category])}>
               {categoryLabels[task.category]}
             </span>
-
-            {/* Due Date */}
-            <span className="text-xs text-muted-foreground">
-              Due: {new Date(task.dueDate).toLocaleDateString("en-US")}
-            </span>
           </div>
         </div>
 

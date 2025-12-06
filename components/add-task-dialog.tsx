@@ -9,6 +9,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import type { Task } from "./todo-dashboard"
+import { supabase } from "@/lib/supabase-client"
 
 interface AddTaskDialogProps {
   open: boolean
@@ -20,25 +21,31 @@ export function AddTaskDialog({ open, onOpenChange, onAddTask }: AddTaskDialogPr
   const [text, setText] = useState("")
   const [category, setCategory] = useState<Task["category"]>("personal")
   const [priority, setPriority] = useState<Task["priority"]>("medium")
-  const [dueDate, setDueDate] = useState("")
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!text.trim() || !dueDate) return
+    if (!text.trim()) return
 
-    onAddTask({
+    const { error } = await supabase.from("tasks").insert({
       text: text.trim(),
       category,
       priority,
-      dueDate,
       completed: false,
+      createdAt: new Date().toISOString()
     })
+
+    if (error) {
+      console.error("Error adding task:", error.message)
+      return
+    }
+
+
 
     // Reset form
     setText("")
     setCategory("personal")
     setPriority("medium")
-    setDueDate("")
+    onOpenChange(false)
   }
 
   return (
@@ -86,17 +93,6 @@ export function AddTaskDialog({ open, onOpenChange, onAddTask }: AddTaskDialogPr
                 <SelectItem value="low">Low</SelectItem>
               </SelectContent>
             </Select>
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="due-date">Due Date</Label>
-            <Input
-              id="due-date"
-              type="date"
-              value={dueDate}
-              onChange={(e) => setDueDate(e.target.value)}
-              required
-            />
           </div>
 
           <div className="flex gap-3 pt-4">
