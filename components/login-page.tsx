@@ -1,27 +1,60 @@
-"use client"
+"use client";
 
-import type React from "react"
+import type React from "react";
 
-import { useState } from "react"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { useState } from "react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { supabase } from "@/lib/supabase-client";
 
 interface LoginPageProps {
-  onLogin: (name: string) => void
+  onLogin: (name: string) => void;
 }
 
 export function LoginPage({ onLogin }: LoginPageProps) {
-  const [isSignup, setIsSignup] = useState(false)
-  const [email, setEmail] = useState("")
-  const [password, setPassword] = useState("")
-  const [name, setName] = useState("")
+  const [isSignup, setIsSignup] = useState(false);
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [name, setName] = useState("");
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault()
-    const userName = name || email.split("@")[0]
-    onLogin(userName)
-  }
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    if (isSignup) {
+      const { error: signUpError } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          data: {
+            full_name: name
+          }
+        }
+      })
+
+      if (signUpError) {
+        console.error("Error signing up: ", signUpError.message);
+        return;
+      }
+    } else {
+      const { error: signInError } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
+      if (signInError) {
+        console.error("Error signing up: ", signInError.message);
+        return;
+      }
+    }
+    const userName = name || email.split("@")[0];
+    onLogin(userName);
+  };
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary/5 via-accent/5 to-background p-4">
@@ -30,13 +63,18 @@ export function LoginPage({ onLogin }: LoginPageProps) {
           <CardTitle className="text-3xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
             My Tasks
           </CardTitle>
-          <CardDescription className="text-base">{isSignup ? "Create a new account" : "Sign in to your account"}</CardDescription>
+          <CardDescription className="text-base">
+            {isSignup ? "Create a new account" : "Sign in to your account"}
+          </CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-5">
             {isSignup && (
               <div className="space-y-2">
-                <label htmlFor="name" className="text-sm font-medium text-foreground">
+                <label
+                  htmlFor="name"
+                  className="text-sm font-medium text-foreground"
+                >
                   Full Name
                 </label>
                 <Input
@@ -50,7 +88,10 @@ export function LoginPage({ onLogin }: LoginPageProps) {
               </div>
             )}
             <div className="space-y-2">
-              <label htmlFor="email" className="text-sm font-medium text-foreground">
+              <label
+                htmlFor="email"
+                className="text-sm font-medium text-foreground"
+              >
                 Email
               </label>
               <Input
@@ -64,7 +105,10 @@ export function LoginPage({ onLogin }: LoginPageProps) {
               />
             </div>
             <div className="space-y-2">
-              <label htmlFor="password" className="text-sm font-medium text-foreground">
+              <label
+                htmlFor="password"
+                className="text-sm font-medium text-foreground"
+              >
                 Password
               </label>
               <Input
@@ -76,6 +120,11 @@ export function LoginPage({ onLogin }: LoginPageProps) {
                 required
                 className="h-11"
               />
+              {isSignup && (
+                <p className="text-xs text-muted-foreground">
+                  Must be at least 6 characters long
+                </p>
+              )}
             </div>
             <Button
               type="submit"
@@ -91,11 +140,13 @@ export function LoginPage({ onLogin }: LoginPageProps) {
             >
               {isSignup ? (
                 <>
-                  Already have an account? <span className="font-semibold text-primary">Sign In</span>
+                  Already have an account?{" "}
+                  <span className="font-semibold text-primary">Sign In</span>
                 </>
               ) : (
                 <>
-                  Don't have an account? <span className="font-semibold text-primary">Sign Up</span>
+                  Don't have an account?{" "}
+                  <span className="font-semibold text-primary">Sign Up</span>
                 </>
               )}
             </button>
@@ -103,5 +154,5 @@ export function LoginPage({ onLogin }: LoginPageProps) {
         </CardContent>
       </Card>
     </div>
-  )
+  );
 }
