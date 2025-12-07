@@ -3,6 +3,7 @@
 import { useState } from "react"
 import { LoginPage } from "@/components/login-page"
 import { TodoDashboard } from "@/components/todo-dashboard"
+import { supabase } from "@/lib/supabase-client"
 
 
 export default function Home() {
@@ -14,7 +15,8 @@ export default function Home() {
     setUserName(name)
   }
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
+    await supabase.auth.signOut()
     setIsAuthenticated(false)
     setUserName("")
   }
