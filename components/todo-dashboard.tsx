@@ -25,23 +25,34 @@ export interface Task {
 }
 
 interface TodoDashboardProps {
-  userName: string;
   onLogout: () => void;
 }
 
 type FilterType = "all" | "active" | "completed";
 type SortType = "priority" | "createdAt";
 
-export function TodoDashboard({ userName, onLogout }: TodoDashboardProps) {
+export function TodoDashboard({ onLogout }: TodoDashboardProps) {
   const [tasks, setTasks] = useState<Task[]>([]);
   const [filter, setFilter] = useState<FilterType>("all");
   const [categoryFilter, setCategoryFilter] = useState<string>("all");
   const [sortBy, setSortBy] = useState<SortType>("createdAt");
   const [isDialogOpen, setIsDialogOpen] = useState(false);
-  
+  const [userName, setUserName] = useState<string>("");
   
   useEffect(() => {
         fetchTasks()
+
+        const getUserData = async () => {
+        const { data: { user } } = await supabase.auth.getUser()
+        if (user?.user_metadata?.full_name) {
+          setUserName(user.user_metadata.full_name)
+        } else {
+          // Fallback to email if no name
+          setUserName(user?.email?.split("@")[0] || "User")
+        }
+      }
+
+        getUserData()
       },[])
   
   

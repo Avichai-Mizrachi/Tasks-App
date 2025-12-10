@@ -23,6 +23,7 @@ export function LoginPage({ onLogin }: LoginPageProps) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [name, setName] = useState("");
+  const [error, setError] = useState<string>("");
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -33,13 +34,13 @@ export function LoginPage({ onLogin }: LoginPageProps) {
         password,
         options: {
           data: {
-            full_name: name
-          }
-        }
-      })
+            full_name: name,
+          },
+        },
+      });
 
       if (signUpError) {
-        console.error("Error signing up: ", signUpError.message);
+        setError("Failed to create account. ");
         return;
       }
     } else {
@@ -48,7 +49,7 @@ export function LoginPage({ onLogin }: LoginPageProps) {
         password,
       });
       if (signInError) {
-        console.error("Error signing up: ", signInError.message);
+        setError("Invalid email or password. Please try again.");
         return;
       }
     }
@@ -133,9 +134,19 @@ export function LoginPage({ onLogin }: LoginPageProps) {
               {isSignup ? "Sign Up" : "Sign In"}
             </Button>
           </form>
+
+          {error && (
+            <div className="mt-4 p-3 bg-red-50 border border-red-200 rounded-md">
+              <p className="text-sm text-red-600">{error}</p>
+            </div>
+          )}
+
           <div className="mt-6 text-center">
             <button
-              onClick={() => setIsSignup(!isSignup)}
+              onClick={() => {
+                setIsSignup(!isSignup);
+                setError("");
+              }}
               className="text-sm text-muted-foreground hover:text-primary transition-colors"
             >
               {isSignup ? (

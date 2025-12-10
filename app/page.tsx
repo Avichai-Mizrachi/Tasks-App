@@ -25,5 +25,5 @@ export default function Home() {
     return <LoginPage onLogin={handleLogin} />
   }
 
-  return <TodoDashboard userName={userName} onLogout={handleLogout} />
+  return <TodoDashboard onLogout={handleLogout} />
 }
