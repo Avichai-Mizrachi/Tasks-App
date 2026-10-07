@@ -66,7 +66,7 @@ npm run dev
 
 4. Open [http://localhost:3000](http://localhost:3000) in your browser
 
-**Note**: The Supabase credentials are included in the code for easy setup. The project uses Supabase's Row Level Security (RLS) to ensure users can only access their own data.
+**Note**: The app uses Supabase's public anon key, which is designed to be exposed in client-side code. All data access is protected by Row Level Security (RLS), so each user can only read and modify their own tasks.
 
 ### Build for Production
 
